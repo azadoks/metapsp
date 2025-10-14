@@ -1,0 +1,45 @@
+{
+    "version": 10,
+    "$comment": "Example presets for metapsp",
+    "configurePresets": [
+        {
+            "name": "linux",
+            "displayName": "Linux",
+            "description": "Build for a generic Linux system with gfortran.",
+            "installDir": "$env{HOME}/.local/",
+            "cacheVariables": {
+                "CMAKE_Fortran_COMPILER": "gfortran"
+            }
+        },
+        {
+            "name": "macos",
+            "displayName": "macOS",
+            "description": "Build for macOS with gcc installed via Homebrew and reference LAPACK compiled via CPM.",
+            "installDir": "$env{HOME}/.local/",
+            "cacheVariables": {
+                "CMAKE_Fortran_COMPILER": "gfortran"
+            }
+        },
+        {
+            "name": "macos-homebrew-lapack",
+            "displayName": "macOS",
+            "description": "Build for macOS with gcc and lapack installed via Homebrew.",
+            "installDir": "$env{HOME}/.local/",
+            "cacheVariables": {
+                "CMAKE_Fortran_COMPILER": "gfortran",
+                "LAPACK_ROOT": "$env{HOMEBREW_PREFIX}/opt/lapack"
+            }
+        },
+        {
+            "name": "macos-accelerate-lapack",
+            "displayName": "macOS",
+            "description": "Build for macOS with gcc installed via Homebrew and Apple Accelerate for LAPACK via lepus2589's accelerate-lapack recipe.",
+            "installDir": "$env{HOME}/.local/",
+            "cacheVariables": {
+                "CMAKE_Fortran_COMPILER": "gfortran",
+                "CMAKE_OSX_SYSROOT": "macosx",
+                "BLA_VENDOR": "Apple"
+            }
+        }
+    ]
+}

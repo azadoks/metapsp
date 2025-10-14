@@ -1,4 +1,50 @@
-# Accurate pseudopotentials for metagga calculations
+# METAPSP
+
+- [Installation](#installation)
+  - [Compiling with "CMake"](#compiling-with-cmake)
+  - [Compiling with "make"](#compiling-with-make)
+- [Accurate pseudopotentials for metagga calculations](#accurate-pseudopotentials-for-metagga-calculations)
+  - [Introduction](#introduction)
+  - [Radial equations](#radial-equations)
+  - [MGGA functional](#mgga-functional)
+  - [All-electron atom](#all-electron-atom)
+  - [All-electron "scattering" states](#all-electron-scattering-states)
+  - [Pseudo-wave-functions](#pseudo-wave-functions)
+  - [Local Potential and "Core" models](#local-potential-and-core-models)
+  - [Non-local Projectors](#non-local-projectors)
+  - [Diagnostics, Ghost detection, etc.](#diagnostics-ghost-detection-etc)
+  - [Application output](#application-output)
+  - [Testing](#testing)
+  - [Bibliography](#bibliography)
+
+## Installation
+
+### Compiling with "CMake"
+Using CMake version 3.23 or newer, run (`[]` means optional):
+```
+mkdir ./build
+cd ./build
+cmake [-DWITH_PSML] [--preset <linux,macos>] [-DCMAKE_INSTALL_PREFIX=/path/to/install] ..
+make [-jN]
+[make install]
+```
+
+### Compiling with "make"
+Open [make.inc](make.inc) and specify the compilers and libraries for your system.
+
+**With PSML**
+
+Follow the instructions in [psml_build.txt](psml_build.txt), then:
+```
+make oncvpspm
+```
+
+**Without PSML**
+```
+make oncvpspmx
+```
+
+## Accurate pseudopotentials for metagga calculations
 **D. R. Hamann**
 
 _Department of Physics and Astronomy, Rutgers University, Piscataway, New Jersey and
@@ -6,24 +52,24 @@ Mat-Sim Research LLC, Lafayette, Colorado_
 
 May 16, 2024
 
-## Introduction
+### Introduction
 METAPSP-1.0.1 is a specialized adaptation of ONCVPSP-4.0.1[<sup>1</sup>](#ref-1) developed to deal with metagga functionals. It has proven possible to generate pseudopotentials satisfying the conditions of generlized norm conservation[<sup>2</sup>](#ref-2) despite the more complicated Kohn-Sham equations required to minimize these functionals. In particular, M101 atomic pseudo wavefunctions exactly reproduce the corresponding all-electron wavefunctions outside their "core radii" $r_c$. Their norms (integrated charge densities inside $r_c$), their radial log derivatives at $r_c$, as well as the first energy derivatives of these log derivatives match the all-electron values at atomic bound states energies and those of selected scattering-states. The convergence of the Fourier transforms of these pseudo wave functions is optimized in the same fashion as those of their lda-gga predecessors in ON401.[<sup>3</sup>](#ref-3) These meta psps will, however, only be of value with application codes that fully treat the Kohn-Sham complications.
 
 The code for performing the mgga calculations is sufficiently different from that implemented for lda/gga psps in ON401 that new routines have been introduced to replace many of those. Most have predecessors *.f90 from which they are distinguished as *_m.f90. The key differences are discussed below. For a preview of the nice pseudopotentials M101 can produce, see the graphics showing a W metapsp treating 8 states as valence in [W_metapsp_plots.pdf](W_metapsp_plots.pdf).
 
 The new code can be built in the manner familiar from ON401. The active library links in [make.inc](make.inc) must be edited to suit local libraries, etc.,and the command make onvpspm issued in src will build the executable oncvpspm.x. The simple shell scripts in the directory test will execute the calculations for a specified file of input data, and automatically generate diagnostic plots using gnuplot.
 
-**Radial Equations**
+### Radial equations
 
 Because of the dependence of the mgga functionals on the kinetic energy density $\tau(\mathbf{r})$ the Kohn-Sham equations contain a gradient term multiplied by a vector potential $\mathbf{v}_\tau(\mathbf{r})$. While independently derived, our radial Schroedinger equation for a spherical atom is identical to Eqs. 21 & 22 of Holzwarth et al.[<sup>4</sup>](#ref-4) and contains a scalar function denoted vtau multiplying a radial first derivative. These terms are used for the all-electron atom and for the pseudo atom.
 
-**MGGA functional**
+### MGGA functional
 
 Despite my initial intention of linking to libxc for a choice of funtionals, extensions of the ON401 interface code retained unresolved errors. I chose to proceed with Pendry's R2SCAN functional,[<sup>5</sup>](#ref-5) for which Natalie Holtzwarth generously provided me local routines that could be directly incorporated into the M101 source directory. With this in hand, Natalie, Susi Letola and I cross-checked our calculations of several atoms and found agreement in eigenvalues and total energies to within numerical accuracy. Three different formulations were used for solution of the radial equations, so I'm confident of the accuracy of the code presented here.
 
 I will be very appreciative of users of the present code who could contribute a libxc interface which can reproduce the local R2SCAN01 results, and hence presumably those of other functionals. On the other hand, since even this well-behaved and internally smoothed functional presented various convergence stability problems, only a limited group of others might be usable with the present algorithms. I've been persuaded that R2SCAN01 is a very sophisticated functional, and testing to assess the value of these M101 psps in applications programs is a more important next step.
 
-**All-electron atom**
+### All-electron atom
 
 The overall calculation is initialized by first performing a PBE functional gga calculation for the atom to obtain a good starting potential and trial set of eigenvalues for the mgga atom. Its vtau is initialized as zero. Despite the good start, the Anderson iteration scheme used for lda/gga proved unstable, and was replaced by simple mixing with a small parameter.
 
@@ -33,12 +79,12 @@ Scalar relativistic corrections to the radial equation^6 also make additions to 
 
 At this point the real trouble started. The all-electron atoms no longer converged, and noise on the log-mesh-spacing scale was found in the first few decades of the mesh. Its amplitude grew exponentilly with iterations. I speculate that this trouble was caused by the fact that, effectively, a third derivative of a function of the density was making its was into the above-mentioned coefficients through the r2scan01 exchange potential. My ad-hoc solution was to smooth that exchange potential (and vtau for good measure) by Gaussian convolution over the first few decades, smoothly crossing over the the originals at larger radii. The Gaussian width was a specified number of mesh points, typically 25, with the Gaussian equal to $10^{-2}$ at the first and last points. The effects of this smoothing were checked against unsmoothed results for non-relativistic calculations, and were identical within numerical accuracy for eigenvalues and total energies.
 
-**All-electron "scattering" states**
+### All-electron "scattering" states
 
 Pseudopotentials satisfying GNC at positive energies were generated from bound-state all-
 electron wave functons in specially-constructed "confining well" potentials which were exactly equal to the full potential and vtau inside $r_c$ for each $\ell$. While the corresponding wellstate.f90 routine in the ON401 code simply added a potential that went to a fixed constant value above the desired energy, the often odd behavior of the r2scan01 vxc and vtau in the atomic tails ultimately led me to smoothly kill the AE vxc and vtau outside the largest $r_c$, while adding the smoothly-rising barrier. The algorithms for adjusting the radial scale and amplitude of that barrier in wellstate_m.f90 ended up being considerably more complex than those in the ON401 routine.
 
-**Pseudo-wave-functions**
+### Pseudo-wave-functions
 
 The pswfs are constructed essentially exactly as in ON401. They are expressed as linear
 combinations of spherical Bessel functions inside $r_c$. Their number is adequate to match the value, the specified number of derivatives, and the integrated charge density of the corresponding AE funcion, to provide orthogonality to the lower-energy pswfs and to still have a few left over to optimize the pswf Fourier convergence. The largest wavevector of the sbfs is qcut specified in the data. Outside $r_c$ they are identical to the AE functions.
@@ -46,7 +92,7 @@ combinations of spherical Bessel functions inside $r_c$. Their number is adequat
 One feature has been added. Optimizing the Fourier convergence essentially means moving as much of the pseudo charge density as the constraints allow outwards towards $r_c$. There are no constraints in this algorithm to keep the first pswf above zero near the origin, and and as users of ON401 know, the message "ERROR first l=? pseudo wave function has node" required input data changes. This condition must be satisfied to construct the pseudopotential. The most common input change is to reduce qcut. So many such errors occurred using my large test-set of existing input data files that the meta code now automatically reduces qcut by 5% increments six times. If the node still
 occurs, then an ERROR exit is generated, and manual reduction of the input $r_c$ is usually the next step. M101 users will appreciate this automation, which eliminated almost all the ERROR exits.
 
-**Local Potential and "Core" models**
+### Local Potential and "Core" models
 
 In ON401, the local potential accompanying the non-local projectors in the complete
 pseudopotential could be chosen as the smooth analytic continuation of the AE potential to the origin, or the so-called "semi-local" potential for a chosen $\ell$. The latter choice essentially meant using the original norm-conserving psp[<sup>7</sup>](#ref-7) and forgoing accuracy at any higher bound- or scattering-state energies for this $\ell$. This choice is no longer available for M101 because similarly-constructed functions do not account for meta issues and are discontinuous at $r_c$. So the input data choice lloc=4, which indicates the analytic continuation approach, is the only M101 option. Despite the discontinuities, these functions are plotted as "Unscreened Semi-Local Guides" in the automated graphics output, because a good choice of input data parameters lpopt, rc(5), and dvloc0 should put the local potential close them.
@@ -55,11 +101,11 @@ Mgga also requires a $\mathbf{v}_\tau$ to be used in the pseudopotential which i
 
 As discussed previously, convergence optimization shifts the weight of pseuo wave functions towards $r_c$. The AE – PS rho and tau differences usually become negative for some ways inside the the maximum $r_c$ until the core rho and tau take over. Continuity requires models to follow this negative behavior a limited distance inside the minimum $r_c$. The most effective strategy I've developed proceeds in two steps, the same for both rho and tau, and is specified by icmod=5 in the input data. The maximun values of the PS rho and tau are determined. A polynomial with the values of the datum rcfact times those maxima at $r=0$ and going to zero with 3 zero derivatives at rcmin is added to the differences. Next, a search is made for that radius inside rcmin from which an analytic continuation of the above functions matching their values and 3 derivatives can be made to achieve values of fcfact times the respective maxima at the origin. This sounds quite complicated, but the choices rcfact=0.5 and fcfact=3, used by default unless icmod already equals 5 in the input data, typically produce "core" models very similar to model rhos adjusted by hand for ON401. It is highly improbable that the small negative regions that often occur in the new models near rcmin will result in net negative values once added to the pseudo $\rho$ and $\tau$ in any application.
 
-**Non-local Projectors**
+### Non-local Projectors
 
 It is the next step in M101 that contains the significant advance making these calculations of value: a formulation for the non-local projectors that incorporates the effects of the vtau term in the radial equation in such a way that generalized norm conservation can be achieved.[<sup>9</sup>](#ref-1) That this is the correct formulation has only been established by what I'll call numerical experiments, not by any analytic derivation. The "Diagnostics" output and log-derivative results achieve a level of accuracy limited only by numerical convergence. The spacing of the logarithmic radial mesh was reduced by a factor of 4 to obtain convergence comparable to the lda/gga calculations. As in ON401, the inclusion of scalar-relativistic calculations continues to introduce errors of order $10^{-4}$. Unlike the meta changes to the radial equations, these are not carried over to pseudopotential calculations, and thus cannot be corrected by further changes to the projectors.
 
-**Diagnostics, Ghost detection, etc.**
+### Diagnostics, Ghost detection, etc.
 
 The [diagnostics_m.f90](src/run_diag_m.f90) routine is a straightforward generalization of that in ON401, simply substituting the meta-adapted all-electron and pseudo radial equations.
 
@@ -71,7 +117,7 @@ Any positive-energy solutions whose mean radii are less than rc are likely to gi
 
 The routines [run_plot_m.f90](src/run_plot_m.f90), [run_pshft_m.f90](src/run_pshft_m.f90), and [gnu_script_m.f90](src/gnu_script_m.f90) are straightforward generalizations of the ON401 versions. Two new plots have been added. The all-electron and model plus pseudo taus are shown with a log vertical scale following the rho plot. Following that, the AE and M+PS vtaus are compared. A log horizontal scale is used for these to illustrate the potentially large effects of vtau in low-density regions of materials. It will be interesting to see if this behavior is particular to R2SCAN01 or arises in other meta psps.
 
-**Application output**
+### Application output
 
 As all the above discussion indicates, the application needs to accept the model $\tau$ input as well as the model $\rho$. The output $\rho_{ps}$, which can be used for initialization is in the ON401 output, is supplemented by the $\tau_{ps}$ in M101. The local potential as well as the non-local projectors remain as in ON401, as do the radial grid output and various "bookkeeping" data.
 
@@ -83,8 +129,7 @@ The psml data format was not included in my ON401 release, but was developed for
 
 If psml output is not needed, the command make oncvpspmx in the src directory will build the alternate executable oncvpspmx.x, and the libxml references in [make.inc](make.inc) can be omitted.
 
-
-**Testing**
+### Testing
 
 Nearing the final stages of development of M101, I assembled a collection of 380 input data
 files developed for ON401 and earlier lda/gga releases. These comprised 91 from the SG
@@ -101,6 +146,8 @@ relativistic calculations, the latter option being chosen when the file SR (cont
 
 I'm releasing this code without ANY systematic testing of these psps' performance in
 applications. Matthieu Verstraete has collaborated with me in developing an initial interface for Abinit and verifying that valance atomic levels could be reasonably reproduced for a few single atoms in large unit cells. Fully-converged testing on a number of cases lies in the future. More important, significantly improved agreement with experiment using M101 psps in codes running r2scan01 is not a-priori guaranteed. I've gathered that in general significant metagga improvements are found in AE solid calculations for weakly-bonded materials. Although I certainly hope not, it is plausible that gga psps could combine well enough with application metagga improvements in the treatment of low-density regions in solids to accomplish similar results.
+
+### Bibliography
 
 <a name="ref-1"></a>
 1. D. R. Hamann, Phys. Rev. B **88** , 085117 (2013).
