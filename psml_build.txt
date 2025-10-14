@@ -1,0 +1,24 @@
+Dear Don,
+
+You can build xmlf90 easily. Just go to 
+
+ https://gitlab.com/siesta-project/libraries/xmlf90/-/releases/1.6.3
+
+and download the source code tagged as "user-level tarball with 'configure'" at the bottom.
+
+Unpack, go into the xmlf90-1.6.1 directory, and type:
+
+mkdir ,build
+cd ,build
+FC={your fortran compiler} ../configure --prefix=/path/to/xmlf90/installation
+make
+make check    # optional
+make install
+
+
+Then, in your make.inc file for oncvpsp, set XMLF90_ROOT to point to /path/to/xmlf90/installation
+and you are set.
+
+Best regards,
+
+Alberto Garcia
