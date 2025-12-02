@@ -20,7 +20,7 @@ project(metapsp
 ##########################################################
 # Options
 ##########################################################
-option(WITH_PSML "Enable PSML output support" ON)
+option(METAPSP_WITH_PSML "Enable PSML output support" ON)
 
 ###########################################################
 # Include CMake modules
@@ -41,19 +41,8 @@ endif()
 ##########################################################
 # Build types
 ##########################################################
-if (NOT CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE RELEASE CACHE STRING
-      "Choose the type of build, options are: None Debug Release."
-      FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Building in debug mode")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -O0 -Wall -fcheck=all -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow -finit-real=snan")
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    message(STATUS "Building in release mode")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O3 -ffast-math -funroll-loops -finit-real=snan -DNDEBUG")
-endif (CMAKE_BUILD_TYPE STREQUAL "Release")
+set(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -Wall -fcheck=all -fbacktrace -ffpe-trap=invalid,zero,overflow,underflow -finit-real=snan")
+set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -ffast-math -funroll-loops -finit-real=snan -DNDEBUG")
 
 ##########################################################
 # Define the paths for static libraries and executables
@@ -78,7 +67,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules
 ###########################################################
 # Common variables
 ###########################################################
-set(COMMON_LIBRARIES "")
+set(METAPSP_DEPENDENCY_LIBRARIES "")
 
 ###########################################################
 # LAPACK
@@ -100,7 +89,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     # First, if the user specifies a LAPACK_ROOT, try to find LAPACK there.
     if (DEFINED LAPACK_ROOT AND (NOT BLA_VENDOR STREQUAL "Apple"))
         find_package(LAPACK HINTS ${LAPACK_ROOT})
-        list(APPEND COMMON_LIBRARIES ${LAPACK_LIBRARIES})
+        list(APPEND METAPSP_DEPENDENCY_LIBRARIES ${LAPACK_LIBRARIES})
     endif()
     # If they don't, or searching in LAPACK_ROOT failed, use
     # lepus2589's accelerate-lapack recipe via CPM to build the
@@ -109,11 +98,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         if (BLA_VENDOR STREQUAL "Apple")
             CPMAddPackage("gh:lepus2589/accelerate-lapack@1.6.0")
             set(LAPACK_FOUND TRUE)
-            list(APPEND COMMON_LIBRARIES LAPACK::LAPACK)
+            list(APPEND METAPSP_DEPENDENCY_LIBRARIES LAPACK::LAPACK)
         else()
             CPMAddPackage("gh:Reference-LAPACK/lapack@3.12.1")
             set(LAPACK_FOUND TRUE)
-            list(APPEND COMMON_LIBRARIES lapack)
+            list(APPEND METAPSP_DEPENDENCY_LIBRARIES lapack)
         endif()
     endif()
 else()
@@ -125,28 +114,42 @@ else()
     if (LAPACK_FOUND)
         message(STATUS "Found LAPACK version ${LAPACK_VERSION}")
         message(STATUS "  LAPACK libraries: ${LAPACK_LIBRARIES}")
-        list(APPEND COMMON_LIBRARIES ${LAPACK_LIBRARIES})
+        list(APPEND METAPSP_DEPENDENCY_LIBRARIES ${LAPACK_LIBRARIES})
     else()
         CPMAddPackage("gh:Reference-LAPACK/lapack@v3.12.1")
-        list(APPEND COMMON_LIBRARIES LAPACK::LAPACK)
+        list(APPEND METAPSP_DEPENDENCY_LIBRARIES LAPACK::LAPACK)
     endif()
 endif()
-
 
 ###########################################################
 # libxmlf90 (via CPM)
 ###########################################################
-if (WITH_PSML)
+if (METAPSP_WITH_PSML)
     CPMAddPackage("https://gitlab.com/siesta-project/libraries/xmlf90.git#1.6.3")
-    list(APPEND COMMON_LIBRARIES xmlf90-lib)
+    list(APPEND METAPSP_DEPENDENCY_LIBRARIES xmlf90-lib)
 endif()
-
-###########################################################
-# CMake Configuration
-###########################################################
-link_directories(${CMAKE_LIBRARY_PATH} ${COMMON_INCLUDE_DIRECTORIES})
 
 ###########################################################
 # Subdirectories
 ###########################################################
 add_subdirectory(src)
+
+###########################################################
+# Installation
+###########################################################
+include(GNUInstallDirs)
+if (METAPSP_WITH_PSML)
+    install(TARGETS metapsp oncvpspm
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+else()
+    install(TARGETS metapsp oncvpspmx
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+endif()

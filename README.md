@@ -20,12 +20,12 @@
 ## Installation
 
 ### Compiling with "CMake"
-Using CMake version 3.23 or newer, run (`[]` means optional):
+Using CMake (tested on versions 3.22, 4.1), run (`[]` means optional):
 ```
 mkdir ./build
 cd ./build
-cmake [-DWITH_PSML] [--preset <linux,macos>] [-DCMAKE_INSTALL_PREFIX=/path/to/install] ..
-make [-jN]
+cmake [-DMETAPSP_WITH_PSML=(ON|OFF)] [--preset <linux,macos>] [-DCMAKE_INSTALL_PREFIX=/path/to/install] ..
+make [-j]
 [make install]
 ```
 

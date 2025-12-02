@@ -1,7 +1,7 @@
 ###########################################################
 # METAPSP library
 ###########################################################
-set(src_libmetapsp
+set(src_metapsp
     aeo.f90
     check_data.f90
     const_basis.f90
@@ -59,24 +59,22 @@ set(src_libmetapsp
     wellstate_m.f90
     wf_rc_der.f90
 )
-if (WITH_PSML)
-    list(APPEND src_libmetapsp m_psmlout_m.f90 m_getopts.f90 m_uuid.f90)
+if (METAPSP_WITH_PSML)
+    list(APPEND src_metapsp m_psmlout_m.f90 m_getopts.f90 m_uuid.f90)
 endif()
-add_library(metapsp STATIC ${src_libmetapsp})
-add_dependencies(metapsp)
-target_link_libraries(metapsp ${COMMON_LIBRARIES})
+add_library(metapsp STATIC ${src_metapsp})
+target_link_libraries(metapsp ${METAPSP_DEPENDENCY_LIBRARIES})
 
 ###########################################################
 # oncvpspm.x (with PSML support)
 # oncvpspmx.x (without PSML support)
 ###########################################################
-if (WITH_PSML)
+if (METAPSP_WITH_PSML)
     add_executable(oncvpspm oncvpsp_m.f90)
     set_target_properties(oncvpspm
         PROPERTIES
             OUTPUT_NAME oncvpspm.x
     )
-    add_dependencies(oncvpspm metapsp)
     target_link_libraries(oncvpspm metapsp)
 else()
     add_executable(oncvpspmx oncvpsp_mx.f90)
@@ -84,6 +82,5 @@ else()
         PROPERTIES
             OUTPUT_NAME oncvpspmx.x
     )
-    add_dependencies(oncvpspmx metapsp)
     target_link_libraries(oncvpspmx metapsp)
 endif()
