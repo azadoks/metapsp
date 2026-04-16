@@ -1,18 +1,18 @@
-! 
+!
 ! Copyright (c) 1989-2024 by D. R. Hamann, Mat-Sim Research LLC and Rutgers
 ! University
 !
-! 
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
-! 
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-! 
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !
@@ -113,7 +113,7 @@
  write(6,'(a/a/a/)') &
 &      'METAPSP  (Metagga psuedopotential code based on ONCVPSp ', &
 &      'with generalized norm-consiervatio and convergence optimization )', &
-&      'alpha version 1.0.1 05/16/2024'
+&      'alpha version 1.0.2 04/16/2026'
 
  write(6,'(a/a/a/)') &
 &      'While it is not required under the terms of the GNU GPL, it is',&
@@ -335,7 +335,7 @@
      rc(l1)=rcmax
    end if
  end do
-  
+
 !find log mesh point nearest input rc
  rcmax=0.0d0
  irc(:)=0
@@ -547,7 +547,7 @@
        qq(jj,ii)=qq(ii,jj)
      end do
    end do
-   
+
    do kk=1,6
      call run_optimize_m(epa(1,l1),ll,mmax,mxprj,rr,uua,qq, &
 &                    irc(l1),qcut(l1),qmsbf(l1),ncon(l1),nbas(l1),nproj(l1), &
@@ -592,9 +592,9 @@
 
 !Create  new models rho and tau.
 !These are based on the differences between the AE and PS rhos and taus.
-!First, a fraction rcfact of the PS maxima of rho and tau are added to 
+!First, a fraction rcfact of the PS maxima of rho and tau are added to
 !the diffs starting at the minimum rc times (1 - (r/rcmin)**2)**4
-!Then the sums are analytically continued to r=0 
+!Then the sums are analytically continued to r=0
 
  rhopsmax=0.0d0
  taupsmax=0.0d0
@@ -602,7 +602,7 @@
    if(rhops(ii)>rhopsmax) rhopsmax=rhops(ii)
    if(taups(ii)>taupsmax) taupsmax=taups(ii)
  end do
- 
+
 
  work(:)=0.0d0
 
@@ -689,7 +689,7 @@
  taumodps(:)=tauloc(:)+taups(:)
 
 !write(6,'(/a,f8.4)') 'Model tau extension to rr=0 begins at rr = ',rr(irx)
- 
+
  work(:)=0.0d0
  vxcps(:)=0.0d0
 
@@ -748,7 +748,7 @@
 &                rr,vp(1,lloc+1),vtaumodps,vkb(1,1,l1),evkb(1,l1), &
 &                uu,up,mmax,mch)
 
-   if(ierr/=0) then 
+   if(ierr/=0) then
      write(6,'(a,3i4)') 'oncvpsp-752: lschvkbb_m ERROR',ll+nodes(l1)+1,ll,ierr
      flush(6)
      stop
@@ -761,7 +761,7 @@
 ! save valence pseudo wave functions for upfout
    do ii=1,mmax
      if(uu(ii)==0.0d0) exit
-   
+
      uupsa(ii,kk)=uu(ii)
      rhops(ii)=rhops(ii)+fa(nc+kk)*(uu(ii)/rr(ii))**2
 
@@ -783,7 +783,7 @@
  taumod(:)=tauloc(:)
 
  vhps(:)=0.0d0 ;  vxcps(:)=0.0d0 ; vtaumodps(:)=0.0d0
- 
+
  sf=0.0d0
 
  call vout_m(0,rhops,taumodps,vhps,vxcps,vtaumodps,zval,sf,eeel,eexc,etot, &
@@ -818,7 +818,7 @@
 
 !fix unscreening error due to greater range of all-electron charge
  do ii=mmax,1,-1
-   if(rhops(ii)==0.0d0) then 
+   if(rhops(ii)==0.0d0) then
      do l1=1,max(lmax+1,lloc+1)
        vpuns(ii,l1)=-zion/rr(ii)
      end do
@@ -838,7 +838,7 @@
 
  call run_phsft_m(lmax,lloc,nproj,epa,epsh1,epsh2,depsh,vkb,evkb, &
 &               rr,vfull,vtau,vp,vtaumodps,zz,mmax,mxprj,irc,srel,ircmin)
- 
+
  call gnu_script_m(epa,evkb,lmax,lloc,mxprj,nproj)
 
 
@@ -850,11 +850,11 @@
 
   rhomod(:,4)=taups(:)
   rhomod(:,5)=taumod(:)
-  call linout(lmax,lloc,rc,vkb,evkb,nproj,rr,vpuns,rho,rhomod, &
-&             rhov,rhoc,zz,zion,mmax,mxprj,iexc,icmod,nrl,drl,atsym, &
-&             na,la,ncon,nbas,nvcnf,nacnf,lacnf,nc,nv,lpopt,ncnf, &
-&             fa,rc0,ep,qcut,debl,facnf,dvloc0,fcfact,rcfact, &
-&             epsh1,epsh2,depsh,rlmax,psfile)
+  call linout_m(lmax,lloc,rc,vkb,evkb,nproj,rr,vpuns,rho,rhomod, &
+&               rhov,rhoc,zz,zion,mmax,mxprj,iexc,icmod,nrl,drl,atsym, &
+&               na,la,ncon,nbas,nvcnf,nacnf,lacnf,nc,nv,lpopt,ncnf, &
+&               fa,rc0,ep,qcut,debl,facnf,dvloc0,fcfact,rcfact, &
+&               epsh1,epsh2,depsh,rlmax,psfile)
  end if
 
  if(trim(psfile)=='upf') then

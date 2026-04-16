@@ -2,28 +2,28 @@
 ! Copyright (c) 1989-2017 by D. R. Hamann, Mat-Sim Research LLC and Rutgers
 ! University
 !
-! 
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
-! 
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-! 
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !
 ! interpolates various arrays onto linear radial mesh to create file
 ! for Abinit input using pspcod=8
 
- subroutine linout(lmax,lloc,rc,vkb,evkb,nproj,rr,vpuns,rho,rhomod, &
-&                  rhov,rhoc,zz,zion,mmax,mxprj,iexc,icmod,nrl,drl,atsym, &
-&                  na,la,ncon,nbas,nvcnf,nacnf,lacnf,nc,nv,lpopt,ncnf, &
-&                  fa,rc0,ep,qcut,debl,facnf,dvloc0,fcfact,rcfact, &
-&                  epsh1,epsh2,depsh,rlmax,psfile)
+ subroutine linout_m(lmax,lloc,rc,vkb,evkb,nproj,rr,vpuns,rho,rhomod, &
+&                    rhov,rhoc,zz,zion,mmax,mxprj,iexc,icmod,nrl,drl,atsym, &
+&                    na,la,ncon,nbas,nvcnf,nacnf,lacnf,nc,nv,lpopt,ncnf, &
+&                    fa,rc0,ep,qcut,debl,facnf,dvloc0,fcfact,rcfact, &
+&                    epsh1,epsh2,depsh,rlmax,psfile)
 
 
 !lmax  maximum angular momentum
@@ -33,7 +33,7 @@
 !evkb  coefficients of VKB projectors
 !nproj  number of vkb projectors for each l
 !rr  log radial grid
-!vpuns  unscreened semi-local pseudopotentials (vp(:,5) is local potential 
+!vpuns  unscreened semi-local pseudopotentials (vp(:,5) is local potential
 !  if linear combination is used)
 !rho  valence pseudocharge
 !rhomod  model core charge
@@ -92,7 +92,7 @@
 
 !
 ! interpolation of everything onto linear output mesh
- 
+
  do  ii=1,nrl
    rl(ii)=drl*dble(ii-1)
  end do
@@ -130,6 +130,9 @@
    ixc_abinit=2
  else if(iexc==4) then
    ixc_abinit=11
+ else if(iexc==5) then
+   ! ABINIT doesn't have R2SCAN01, so write LibXC code
+   ixc_abinit=-645642
  else if(iexc<0) then
    ixc_abinit=iexc
  end if
@@ -155,7 +158,7 @@
  end if
 
  write(6,'(/a)') 'Begin PSPCODE8'
- write(6,'(3a,4f10.5)') atsym,'    ONCVPSP-4.0.1' &
+ write(6,'(3a,4f10.5)') atsym,'    METAPSP-1.0.2' &
 &  ,'  r_core=',(rc(l1),l1=1,lmax+1)
  write(6,'(2f12.4, 5a)') zz,zion, '      ', pspd,  &
 &  '    zatom,zion,pspd'
@@ -267,8 +270,8 @@
 ! write termination signal
  write(6,'(a)')'</INPUT>'
  write(6,'(/a)') 'END_PSP'
-  
+
  deallocate(rhol,rl,vkbl,vpl,rhomodl,rhovl,rhocl)
 
  return
- end subroutine linout
+ end subroutine linout_m

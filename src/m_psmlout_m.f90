@@ -5,17 +5,17 @@
 !
 ! Changes by D. R. Hamannn to adapt to metagga pseuopotentials
 !
-! 
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
-! 
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-! 
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !
@@ -24,26 +24,26 @@
 module m_psmlout
 
   implicit none
-  
+
   public :: psmlout, copy_input_file_for_psml
   public :: get_ec_hints
   private
 
   integer, parameter :: dp = selected_real_kind(10,100)
 
-  
+
   character(len=1), dimension(0:4) :: lsymb = (/'s','p','d','f','g'/)
-  
+
   character(len=*), parameter :: PSML_VERSION = "1.2"
   character(len=*), parameter :: PSML_NAMESPACE = "http://esl.cecam.org/PSML/ns/1.2"
   character(len=*), parameter, public :: PSML_PATCH = "psml-4.0.1-81"
-  character(len=*), parameter, public :: PSML_CREATOR = "METAPSP-1.0.1" // "+" // PSML_PATCH
+  character(len=*), parameter, public :: PSML_CREATOR = "METAPSP-1.0.2" // "+" // PSML_PATCH
   character(len=*), parameter :: PSML_FILENAME = "METAPSPPSML"
 
   integer, parameter  :: POLY_ORDER_EXTRAPOL = 7  ! For extrapolation at r=0
 
   logical :: check_interp
-  
+
   ! Support for cutoff hints -----
   type hint_t
      real(dp) :: err_level
@@ -74,7 +74,7 @@ module m_psmlout
 !evkb  coefficients of VKB projectors
 !nproj  number of vkb projectors for each l
 !rr  log radial grid
-!vpuns  unscreened semi-local pseudopotentials (vp(:,5) is local potential 
+!vpuns  unscreened semi-local pseudopotentials (vp(:,5) is local potential
 !  if linear combination is used)
 !rho  valence pseudocharge
 !rhomod  model core charge
@@ -93,7 +93,7 @@ module m_psmlout
 !psfile  should be 'upf' or 'psp8' or 'both'
 !uupsa  pseudo-atomic orbital array
 !ea: energy levels
-!epa: actual reference energies for projectors   
+!epa: actual reference energies for projectors
 
   ! Alberto Garcia, February 1, 2015
 
@@ -151,7 +151,7 @@ module m_psmlout
   integer          :: ncore, nval, ncp, norbs, npots
   integer          :: n1
   real(dp)         :: energy_level, eref
-  
+
   integer, allocatable  :: n(:), l(:)
   integer, allocatable  :: nn(:), ll(:)
   real(dp), allocatable :: f(:), ff(:)
@@ -159,14 +159,14 @@ module m_psmlout
 
   real(dp) :: rmax, delta, al
   integer, allocatable  :: isample(:)
-  
+
   character(len=10)     :: datestr
 
   logical :: tdopsp, nonrel, polarized, there_is_core, found
   integer :: lun, stat
 
   logical :: write_wfns
-  
+
   external :: dpnint   ! Resampler + extrapolator to r=0
 
 !DRH hack - additional input variables for edited input data echo
@@ -177,12 +177,12 @@ module m_psmlout
 
 
  !---
-  
+
   call get_psml_options(write_wfns,check_interp)
 
 !DRH hack to add valence pseudo wave functions to psml output
  write_wfns=.true.
-  
+
   call date_and_time(VALUES=dtime)
   write(datestr,"(i4,'-',i2.2,'-',i2.2)") dtime(1:3)
 
@@ -373,12 +373,12 @@ if (stat == 0) close(66, status='delete')
   call xml_NewElement(xf,"annotation")
     call my_add_attribute(xf,"pseudo-energy",str(epstot))
     ! Cutoff hints a la pseudo-dojo
-    ! Use the last three error levels (10^-5, sqrt(10)*10^-5, 10^-4 
+    ! Use the last three error levels (10^-5, sqrt(10)*10^-5, 10^-4
     call my_add_attribute(xf,"cutoff_hint_low",str(ec_hint(5)%cutoff_hint))
     call my_add_attribute(xf,"cutoff_hint_normal",str(ec_hint(6)%cutoff_hint))
     call my_add_attribute(xf,"cutoff_hint_high",str(ec_hint(7)%cutoff_hint))
   call xml_EndElement(xf,"annotation")
-    
+
   ! XC name handling
   call exchange_correlation_info(xf,iexc)
   !
@@ -411,7 +411,7 @@ if (stat == 0) close(66, status='delete')
  ! the tails of the wavefunctions (to accomodate them and the charge
  ! density), but it is more straightforward to simply keep the maximum
  ! rmax in the original logarithmic grid
- 
+
  rmax = rr(mmax)
  delta = 0.5_dp*drl
  call get_sampled_grid(mmax,rr,rmax,delta,nrl_full,isample,r0)
@@ -420,14 +420,14 @@ if (stat == 0) close(66, status='delete')
  ! typically used in oncvpsp (drl*nrl0 in the linear grid)
  ! This will be used for everything except the valence charge and
  ! (possibly) the wavefunctions
- 
+
  nrl_short = get_npts_in_range(r0,range=drl*nrl0)
 
   !! --------------------------------------
   !! Full range for grid and valence charge
- 
+
   nrl = nrl_full
- 
+
   call xml_NewElement(xf,"grid")
   call my_add_attribute(xf,"npts",str(nrl))
 
@@ -481,7 +481,7 @@ if (stat == 0) close(66, status='delete')
   !! --------------------------------------
   !! Every other magnitude uses a shorter section of the grid
   nrl = nrl_short
-  
+
   if (there_is_core) then
      rcore = rr(irct)
      call xml_NewElement(xf,"pseudocore-charge")
@@ -507,7 +507,7 @@ if (stat == 0) close(66, status='delete')
                 "MGGA function adjusted by input data fcfact and rcfact")
         end select
      call xml_EndElement(xf,"annotation")
-        
+
      call xml_NewElement(xf,"radfunc")
 
      call resample(r,chcore,npts,r0,isample,f0,nrl)
@@ -524,7 +524,7 @@ if (stat == 0) close(66, status='delete')
                                     str(4))
      call xml_NewElement(xf,"annotation")
      call my_add_attribute(xf,"model-tau-form",  &
-&             "MGGA function adjusted by input data fcfact and rcfact") 
+&             "MGGA function adjusted by input data fcfact and rcfact")
 !         call my_add_attribute(xf,"model-tau-form",  &
 !&             "remainder of vtau unscreening")
      call xml_EndElement(xf,"annotation")
@@ -547,7 +547,7 @@ if (stat == 0) close(66, status='delete')
 ! else
 !    call my_add_attribute(xf,"set","non_relativistic")
 ! endif
-! !  
+! !
 ! vpsd: do i = 1, npots
 !    vps => vpuns(:,i)
 
@@ -555,7 +555,7 @@ if (stat == 0) close(66, status='delete')
 !    ! in case unscreening of the potentials causes unwanted oscillations
 !    ! This is the same procedure introduced in V4 of oncvpsp for upf
 !    ! and psp8 output. It is used below for the local potential also.
-!    
+!
 !    call resample(r,vps,npts,r0,isample,f0,nrl, override_at_zero=.true.)
 !    write(fname,"(a,i1,a)") "slps.l=", ll(i), ".check"
 !    call check_grid(r,vps,npts,r0,f0,nrl,fname)
@@ -641,7 +641,7 @@ if (stat == 0) close(66, status='delete')
       enddo
       call xml_EndElement(xf,"pseudo-wave-functions")
    endif
-   
+
   call xml_EndElement(xf,"psml")
 
 
@@ -744,7 +744,7 @@ end subroutine add_data
 
        character(len=*), intent(in), optional  :: set
        real(dp), intent(in), optional  :: f(:)
-       
+
        call xml_NewElement(xf,trim(class))
          if (present(set))  call my_add_attribute(xf,"set",set)
 
@@ -792,13 +792,13 @@ end subroutine add_data
 
        logical, save  :: first_time = .true.
        integer, save  :: lun_summary
-       
+
        integer  :: i, lun
        real(dp) :: v5, diff, maxdiff, rmax, v7
        real(dp) :: al, sum5, sum7, diff5, diff7
 
        if (.not. check_interp) return
-       
+
        if (first_time) then
           ! Open cumulative report file
           call get_unit(lun_summary)
@@ -808,7 +808,7 @@ end subroutine add_data
                                               'Norm-diff@7th', 'MaxDiff', 'r(MaxDiff)'
           first_time = .false.
        endif
-       
+
        ! Compute log grid step factor
        ! r(i) = r(1)*exp(a(i-1))
        al = 0.01d0 * dlog(r1(101)/r1(1))
@@ -816,7 +816,7 @@ end subroutine add_data
        call get_unit(lun)
        open(unit=lun,file=trim(fname),form="formatted", &
             status="unknown",action="write",position="rewind")
-       
+
        maxdiff = 0.0_dp
        sum5 = 0
        sum7 = 0
@@ -845,14 +845,14 @@ end subroutine add_data
 !
 ! Copyright (c) 1989-2024 by D. R. Hamann, Mat-Sim Research LLC and Rutgers
 ! University
-! 
+!
 ! Modified by Alberto Garcia, March 2015
 ! This routine is included in this module with permission from D.R. Hamann.
 !
  subroutine dpnint1(npoly, xx, yy, nn, r, val, debug)
 
 ! Modified by Alberto Garcia, March 2015 from routine
-! dpnint by D.R. Hamann. 
+! dpnint by D.R. Hamann.
 ! Changes:
 !   -- A single value is returned
 !   -- It can extrapolate, instead of stopping,
@@ -861,7 +861,7 @@ end subroutine add_data
 !   -- If the number of data points is less than
 !      npoly+1, npoly is implicitly reduced, without
 !      error, and without warning.
-!   -- Debug interface 
+!   -- Debug interface
 !
 ! local polynomial interpolation of data yy on nn points xx
 ! giving value val on point r
@@ -937,7 +937,7 @@ end subroutine add_data
  ! rmax is determined on the basis of the tails of the
  ! wavefunctions (to accomodate the charge density)
  ! The actual tolerance is given by CUTOFF_RMAX above
- 
+
  subroutine get_sampled_grid(mmax,rr,rmax,delta,nrl,isample,r0)
    integer, intent(in)   :: mmax
    real(dp), intent(in)  :: rr(:)
@@ -959,7 +959,7 @@ end subroutine add_data
       is = is + 1
       rs = rr(j)
    enddo
-   
+
    nrl = is
    allocate(isample(nrl),r0(nrl))
 
@@ -1013,7 +1013,7 @@ end subroutine add_data
    integer  :: is
    real(dp) :: val
    logical  :: extrapolate_to_zero
-   
+
    do is = 2, nrl
       f0(is) = ff(isample(is))
    enddo
@@ -1033,9 +1033,9 @@ end subroutine add_data
    !...
    ! Others
    ! ...
-   
+
  end subroutine resample
-   
+
 subroutine copy_input_file_for_psml()
 ! Makes two copies of the input file: one for oncvpsp
 ! to read, and another to echo the input in the PSML file
@@ -1059,10 +1059,10 @@ subroutine copy_input_file_for_psml()
 
 !  Now re-open INPUT_FILE as unit 5 for further processing
 !  by oncvpsp
-      
+
       open(unit=5,file='INPUT_FILE',action='read',status='old', &
            form='formatted',position='rewind')
-      
+
 end subroutine copy_input_file_for_psml
 
 subroutine cdata_section_from_file(xf,filename)
@@ -1074,9 +1074,9 @@ subroutine cdata_section_from_file(xf,filename)
   integer :: stat
   character(len=512) :: line
   character(len=1)   :: nl = char(10)
-  
+
   character(len=32000) :: buffer ! to accumulate characters
-  
+
       open(44,file=trim(filename),form="formatted",status="old", &
            position="rewind",action="read")
       buffer = ""
@@ -1088,22 +1088,22 @@ subroutine cdata_section_from_file(xf,filename)
 !DRH hack
       close(44)
 !     close(44,status='delete')
-      
+
       call xml_AddCDATASection(xf,trim(buffer),line_feed=.true.)
-!                                                                     
+!
     end subroutine cdata_section_from_file
-    
+
     subroutine exchange_correlation_info(xf,iexc)
       use xmlf90_wxml
 
       type(xmlf_t), intent(inout)   :: xf
       integer, intent(in)           :: iexc
-      
+
       character(len=120) :: xcfuntype, names(2), libxc_string
       character(len=60)  :: types(2), libxc_type
       integer :: x_code, c_code
       integer :: i, nfuncs
-      
+
       integer :: libxc_id(2)
 
 !     external :: libxc_info
@@ -1112,48 +1112,48 @@ subroutine cdata_section_from_file(xf,filename)
 
       select case(iexc)
 
-      case(1) 
+      case(1)
          xcfuntype    = 'LDA -- Wigner'
          nfuncs = 2
          libxc_id = (/ 1, 2 /)
          names(1) = "Slater exchange (LDA)"
          names(2) = "Wigner (LDA)"
          types(1) = "exchange"
-         types(2) = "correlation" 
-      case(2) 
+         types(2) = "correlation"
+      case(2)
          xcfuntype    = 'LDA -- Hedin-Lundqvist'
          nfuncs = 2
          libxc_id = (/ 1, 4 /)
          names(1) = "Slater exchange (LDA)"
          names(2) = "Hedin & Lundqvist (LDA)"
          types(1) = "exchange"
-         types(2) = "correlation" 
-      case(3) 
+         types(2) = "correlation"
+      case(3)
          xcfuntype    = 'LDA -- Ceperley-Alder Perdew-Zunger'
          nfuncs = 2
          libxc_id = (/ 1, 9 /)
          names(1) = "Slater exchange (LDA)"
          names(2) = "Perdew & Zunger (LDA)"
          types(1) = "exchange"
-         types(2) = "correlation" 
+         types(2) = "correlation"
 
-      case(4) 
+      case(4)
          xcfuntype    = 'GGA -- Perdew-Burke-Ernzerhof'
          nfuncs = 2
          libxc_id = (/ 101, 130 /)
          names(1) = "Perdew, Burke & Ernzerhof (GGA)"
          names(2) = "Perdew, Burke & Ernzerhof (GGA)"
          types(1) = "exchange"
-         types(2) = "correlation" 
+         types(2) = "correlation"
 
-      case(5) 
+      case(5)
          xcfuntype    = 'METAGGA -- Perdew'
          nfuncs = 2
          libxc_id = (/ 645, 642 /)
          names(1) = "R2SCAN01 (MGGA)"
          names(2) = "R2SCAN01 (MGGA)"
          types(1) = "exchange"
-         types(2) = "correlation" 
+         types(2) = "correlation"
 
       case(:-1)      ! libxc encoding -XXXCCC
                      !             or -YYY for single exc functional
@@ -1166,10 +1166,10 @@ subroutine cdata_section_from_file(xf,filename)
          else
             x_code = -iexc/1000
             c_code = -iexc - 1000*x_code
-            nfuncs = 2 
+            nfuncs = 2
             libxc_id = (/ x_code, c_code /)
          endif
-     
+
       end select
 
      call xml_NewElement(xf,"annotation")
@@ -1180,7 +1180,7 @@ subroutine cdata_section_from_file(xf,filename)
      call xml_NewElement(xf,"libxc-info")
      select case(iexc)
 
-     case(1:5) 
+     case(1:5)
         call my_add_attribute(xf,"number-of-functionals",str(nfuncs))
         do i = 1, nfuncs
            call xml_NewElement(xf,"functional")
@@ -1189,7 +1189,7 @@ subroutine cdata_section_from_file(xf,filename)
            call my_add_attribute(xf,"id",str(libxc_id(i)))
            call xml_EndElement(xf,"functional")
         enddo
-        
+
      case(:-1)      ! libxc encoding -XXXCCC
                     !             or -YYY for single exc functional
         call my_add_attribute(xf,"number-of-functionals",str(nfuncs))
@@ -1201,11 +1201,11 @@ subroutine cdata_section_from_file(xf,filename)
            call my_add_attribute(xf,"id",str(libxc_id(i)))
            call xml_EndElement(xf,"functional")
         enddo
-        
+
      end select
-  
+
         call xml_EndElement(xf,"libxc-info")
-  
+
   call xml_EndElement(xf,"exchange-correlation")
 
 end subroutine exchange_correlation_info
@@ -1216,7 +1216,7 @@ subroutine get_psml_options(write_wfns,check_interp,relat_output_spec)
   logical, intent(out)          :: write_wfns
   logical, intent(out)          :: check_interp
   character(len=*), intent(out), optional :: relat_output_spec
-  
+
       character(len=200) :: opt_arg
       character(len=10)  :: opt_name, spec
       integer :: iostat, n_opts
@@ -1242,7 +1242,7 @@ subroutine get_psml_options(write_wfns,check_interp,relat_output_spec)
              write(0,*) "Usage: oncvpsp [-c -w -r spec]"
              write(0,*) " -c  : produce interpolation .check files"
              write(0,*) " -w  : output pseudo-wavefunctions in psml file"
-             write(0,*) " -r [ lj | sr-so | both ] : kind of relativistic output" 
+             write(0,*) " -r [ lj | sr-so | both ] : kind of relativistic output"
              STOP
           end select
        enddo
@@ -1252,17 +1252,17 @@ subroutine get_psml_options(write_wfns,check_interp,relat_output_spec)
 
 end subroutine get_psml_options
 
-subroutine get_ec_hints(cvgplt) 
+subroutine get_ec_hints(cvgplt)
 ! Find cutoff hints 'a la pseudo-dojo (ppgen starting point)'
   real(dp), intent(in) :: cvgplt(2,7,2,4)
 
   integer :: i
-  
+
     ! Take the maxima over angular momenta; nearest integer
   do i = 1, 7
      ec_hint(i) = hint_t(cvgplt(2,i,1,1),nint(maxval(cvgplt(1,i,1,:))))
   enddo
-  
+
 end subroutine get_ec_hints
 
 end module m_psmlout
