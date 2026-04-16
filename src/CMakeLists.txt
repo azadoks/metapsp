@@ -20,7 +20,7 @@ set(src_metapsp
     gauss_smooth.f90
     globalmath_loc.F90
     gnu_script_m.f90
-    linout.f90
+    linout_m.f90
     lschfb.f90
     lschfb_m.f90
     lschfs_m.f90

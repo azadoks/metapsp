@@ -2,17 +2,17 @@
 ! Copyright (c) 1989-2024 by D. R. Hamann, Mat-Sim Research LLC and Rutgers
 ! University
 !
-! 
+!
 ! This program is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
-! 
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-! 
+!
 ! You should have received a copy of the GNU General Public License
 ! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !
@@ -34,7 +34,7 @@
 !evkb  coefficients of VKB projectors
 !nproj  number of vkb projectors for each l
 !rr  log radial grid
-!vpuns  unscreened semi-local pseudopotentials (vp(:,5) is local potential 
+!vpuns  unscreened semi-local pseudopotentials (vp(:,5) is local potential
 !  if linear combination is used)
 !rho  valence pseudocharge
 !rhomod  model core charge
@@ -87,7 +87,7 @@
 !Output variables - printing only
 
 !Local variables
- integer :: ii,jj,ll,l1,iproj,ntotproj,nrlproj
+ integer :: ii,jj,l1,iproj,ntotproj,nrlproj
  integer :: dtime(8)
  real(dp) :: al,nrmsum,uurcut
  real(dp), allocatable :: rhomodl(:,:),dmat(:,:)
@@ -109,10 +109,10 @@
        exit  ! Cutoff radius such that uu norm accurate to 10^-6
      end if
    end do
-   if (rr(jj) > uurcut) uurcut = rr(jj)  
+   if (rr(jj) > uurcut) uurcut = rr(jj)
  end do
  if (uurcut > drl*dble(nrl-1)) then
-   nrl = 1 + uurcut/drl
+   nrl = 1 + int(uurcut/drl)
    if(mod(nrl,2)/=0) nrl=nrl+1
    write(6,'(a,i5,a,f10.5)') "Updating nrl = ", nrl, " for uurcut = ", uurcut
  end if
@@ -180,7 +180,7 @@
 &      '  <PP_INFO>'
  write(6,'(/t2,a/t2,a/t2,a/t2,a/t2,a/t2,a/t2,a//)') &
        'This pseudopotential file has been produced using the code', &
-&      'METAPSP-1.0.0, a code for metagga functails adapted in 2024 from',&
+&      'METAPSP-1.0.2, a code for metagga functails adapted in 2024 from',&
 &      'ONCVPSP  (Optimized Norm-Conservinng Vanderbilt PSeudopotential)', &
 &      'scalar-relativistic version 4.0.1 06/04/2019 by D. R. Hamann', &
 &      'The code is available through a link at URL www.mat-simresearch.com.', &
@@ -190,7 +190,7 @@
  write(6,'(t2,a/t2,a/t2,a/t2,a//)') &
 &      'While it is not required under the terms of the GNU GPL, it is',&
 &      'suggested that you cite D. R. Hamann, Phys. Rev. B 88, 085117 (2013)',&
-&      'in any publication using these pseudopotentials.' 
+&      'in any publication using these pseudopotentials.'
 
  write(6,'(a)') &
 &      '    <PP_INPUTFILE>'
@@ -296,11 +296,11 @@
      write(6,'(t8,a)') &
 &        'core_correction="F"'
   end if
-  
+
 ! Specify that the file contains valence tau and model "core" tau for metaGGA
    write(6,'(t8,a)') &
 &        'with_metagga_info="T"'
-   
+
      write(6,'(t8,a)') &
 &        'functional="R2SCAN01"'
 !&        'functional="645642"'
@@ -360,15 +360,15 @@
 
  write(6,'(8f10.4)') (rl(ii),ii=1,nrl)
 
- write(6,'(t4a)') &
+ write(6,'(t4,a)') &
 &      '</PP_R>'
 
- write(6,'(t4a,i4,a)') &
+ write(6,'(t4,a,i4,a)') &
 &      '<PP_RAB type="real"  size="',nrl,'" columns="8">'
 
  write(6,'(8f10.4)') (drl,ii=1,nrl)
 
- write(6,'(t4a)') &
+ write(6,'(t4,a)') &
 &      '</PP_RAB>'
 
    write(6,'(t2,a)') &
@@ -462,9 +462,9 @@
 &       'label="',na(nc+ii),lnames(l1+1:l1+1),'"'
      write(6,'(t8,a,i1,a)') &
 &          'l="',l1,'" >'
-  
+
   write(6,'(1p,4e20.10)') (uual(jj,ii),jj=1,nrl)
-  
+
   write(6,'(t4,a,i1,a)') &
 &       '</PP_CHI.',ii,'>'
 
@@ -509,7 +509,7 @@
  write(6,'(a)') &
 &      '</UPF>'
 
-  
+
  deallocate(rhol,rl,vkbl,vpl,rhomodl,dmat,taupsl,taumodl)
 
 ! write termination flag
