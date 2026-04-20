@@ -274,7 +274,7 @@
 &        'relativistic="scalar"'
  else
    write(6,'(t8,a)') &
-&        'relativistic="F"'
+&        'relativistic="nonrelativistic"'
  end if
    write(6,'(t8,a)') &
 &        'is_ultrasoft="F"'
