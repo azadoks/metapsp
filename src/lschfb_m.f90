@@ -190,7 +190,7 @@
 
 ! revised search strategy for classical turning point 
 ! to deal with mgga iissues at large r
-   mch=0
+   imch=0
 !  do ii=1,mmax
    do ii=1,mmax-1
 !    if(rr(ii)<50.0d0*rr(1)) cycle
@@ -201,6 +201,12 @@
      end if
    end do
 
+   if(imch==0) then
+      ierr=-1
+      return
+   end if
+
+   mch=0
    do ii=imch+1,mmax
      if(cfm(ii)>0.0d0) then
         mch=ii
